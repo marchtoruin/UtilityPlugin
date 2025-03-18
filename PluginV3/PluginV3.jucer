@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="i0PAkU" name="Justin's Stereo Sculptor" projectType="audioplug" useAppConfig="0"
+<JUCERPROJECT id="i0PAkU" name="JustinsStereoSculptor" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
-  <MAINGROUP id="jC5AAz" name="Justin's Stereo Sculptor">
+  <MAINGROUP id="jC5AAz" name="JustinsStereoSculptor">
     <GROUP id="{A77842FC-2B43-9EAE-9664-9D155D3F8F31}" name="Source">
-      <FILE id="qZW4Cx" name="PluginProcessor.cpp" compile="1" resource="0"
+      <FILE id="ejzlMT" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
-      <FILE id="U41LZq" name="PluginProcessor.h" compile="0" resource="0"
+      <FILE id="Z3LvHj" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
-      <FILE id="IieKqa" name="PluginEditor.cpp" compile="1" resource="0"
+      <FILE id="G1AzjV" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
-      <FILE id="XfvDBU" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="liqjXW" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="OKrb8X" name="LevelMeter.cpp" compile="1" resource="0" file="Source/LevelMeter.cpp"/>
+      <FILE id="xFfZSk" name="LevelMeter.h" compile="0" resource="0" file="Source/LevelMeter.h"/>
     </GROUP>
-    <FILE id="eNPNON" name="LevelMeter.cpp" compile="1" resource="0" file="Source/LevelMeter.cpp"/>
-    <FILE id="QPePBp" name="LevelMeter.h" compile="0" resource="0" file="Source/LevelMeter.h"/>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
@@ -35,23 +35,23 @@
   <EXPORTFORMATS>
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="Justin's Stereo Sculptor"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="Justin's Stereo Sculptor"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="JustinsStereoSculptor"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="JustinsStereoSculptor"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_plugin_client" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_dsp" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
       </MODULEPATHS>
     </VS2022>
   </EXPORTFORMATS>

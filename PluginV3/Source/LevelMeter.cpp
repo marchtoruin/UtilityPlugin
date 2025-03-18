@@ -5,10 +5,19 @@ LevelMeter::LevelMeter()
 {
     lastUpdateTime = static_cast<float>(juce::Time::getMillisecondCounterHiRes());
     
-    // Set default colors
+    // Set default colors - update to cyan and magenta theme
+    meterColourLow = juce::Colour(0xFF00DCDC);   // Cyan
+    meterColourMid = juce::Colour(0xFF9EFFFF);   // Light cyan
+    meterColourHigh = juce::Colour(0xFFFF3B96);  // Magenta
+    
+    // Set default colors for the component
     setColour(backgroundColourId, juce::Colours::black);
     setColour(foregroundColourId, juce::Colours::green);
     setColour(outlineColourId, juce::Colours::white.withAlpha(0.5f));
+    
+    // Set faster decay rates for better responsiveness
+    meterDecayRate = 36.0f;    // 36dB/second decay for main level
+    peakDecayRate = 24.0f;     // Faster decay for peak marker (was 12.0f)
 }
 
 LevelMeter::~LevelMeter()
@@ -24,55 +33,139 @@ void LevelMeter::paint(juce::Graphics& g)
     updatePeakAndDecay();
     
     // Draw background
-    g.setColour(findColour(backgroundColourId));
+    g.setColour(juce::Colour(0xFF0F0F1A));
     g.fillRoundedRectangle(bounds, 2.0f);
+    
+    // Draw grid lines - 80s style
+    g.setColour(juce::Colour(0xFF2A2A40));
+    float gridSpacing;
+    
+    if (isVertical) {
+        gridSpacing = bounds.getHeight() / 10.0f;
+        for (int i = 1; i < 10; i++) {
+            float y = bounds.getY() + i * gridSpacing;
+            g.drawLine(bounds.getX(), y, bounds.getRight(), y, 1.0f);
+        }
+    } else {
+        gridSpacing = bounds.getWidth() / 10.0f;
+        for (int i = 1; i < 10; i++) {
+            float x = bounds.getX() + i * gridSpacing;
+            g.drawLine(x, bounds.getY(), x, bounds.getBottom(), 1.0f);
+        }
+    }
+    
+    // Draw border with neon effect
+    g.setColour(meterColourLow.withAlpha(0.5f));
+    g.drawRoundedRectangle(bounds, 2.0f, 1.0f);
     
     // Draw level meter
     if (level > 0.0f)
     {
-        g.setColour(getColourForLevel(level));
-        
         if (isVertical)
         {
             auto levelHeight = bounds.getHeight() * level;
             auto meterBounds = bounds.removeFromBottom(levelHeight);
+            
+            // Create a gradient from cyan to magenta with translucent effect
+            juce::ColourGradient gradient;
+            gradient.point1 = meterBounds.getBottomLeft();
+            gradient.point2 = meterBounds.getTopLeft();
+            
+            // Add color stops based on level with translucency
+            gradient.addColour(0.0, meterColourLow.withAlpha(0.65f));                  // Translucent cyan at bottom
+            gradient.addColour(0.5, meterColourLow.interpolatedWith(meterColourHigh, 0.3f).withAlpha(0.7f));  // Blended in middle
+            gradient.addColour(0.85, meterColourLow.interpolatedWith(meterColourHigh, 0.7f).withAlpha(0.8f)); // More magenta
+            gradient.addColour(1.0, meterColourHigh.withAlpha(0.85f));                 // Translucent magenta at top
+            
+            g.setGradientFill(gradient);
             g.fillRoundedRectangle(meterBounds, 2.0f);
+            
+            // Add an inner highlight to create glass effect
+            auto innerHighlightBounds = meterBounds.reduced(1.0f, 2.0f);
+            innerHighlightBounds.setBottom(innerHighlightBounds.getBottom() - 2.0f);
+            g.setColour(juce::Colours::white.withAlpha(0.15f));
+            g.fillRoundedRectangle(innerHighlightBounds, 1.5f);
+            
+            // Draw neon edges to make it pop
+            g.setColour(juce::Colours::white.withAlpha(0.3f));
+            g.drawRoundedRectangle(meterBounds, 2.0f, 1.0f);
+            
+            // Draw neon highlight along top edge
+            g.setColour(juce::Colours::white.withAlpha(0.6f));
+            g.fillRect(meterBounds.getX() + 2.0f, meterBounds.getY(), meterBounds.getWidth() - 4.0f, 1.5f);
         }
         else
         {
             auto levelWidth = bounds.getWidth() * level;
             auto meterBounds = bounds.removeFromLeft(levelWidth);
+            
+            // Create a gradient from cyan to magenta with translucent effect
+            juce::ColourGradient gradient;
+            gradient.point1 = meterBounds.getTopLeft();
+            gradient.point2 = meterBounds.getTopRight();
+            
+            // Add color stops based on level with translucency
+            gradient.addColour(0.0, meterColourLow.withAlpha(0.65f));                  // Translucent cyan at left
+            gradient.addColour(0.5, meterColourLow.interpolatedWith(meterColourHigh, 0.3f).withAlpha(0.7f));  // Blended in middle
+            gradient.addColour(0.85, meterColourLow.interpolatedWith(meterColourHigh, 0.7f).withAlpha(0.8f)); // More magenta
+            gradient.addColour(1.0, meterColourHigh.withAlpha(0.85f));                 // Translucent magenta at right
+            
+            g.setGradientFill(gradient);
             g.fillRoundedRectangle(meterBounds, 2.0f);
+            
+            // Add an inner highlight to create glass effect
+            auto innerHighlightBounds = meterBounds.reduced(2.0f, 1.0f);
+            innerHighlightBounds.setRight(innerHighlightBounds.getRight() - 2.0f);
+            g.setColour(juce::Colours::white.withAlpha(0.15f));
+            g.fillRoundedRectangle(innerHighlightBounds, 1.5f);
+            
+            // Draw neon edges to make it pop
+            g.setColour(juce::Colours::white.withAlpha(0.3f));
+            g.drawRoundedRectangle(meterBounds, 2.0f, 1.0f);
+            
+            // Draw neon highlight along right edge
+            g.setColour(juce::Colours::white.withAlpha(0.6f));
+            g.fillRect(meterBounds.getRight() - 1.5f, meterBounds.getY() + 2.0f, 1.5f, meterBounds.getHeight() - 4.0f);
         }
     }
     
-    // Draw peak marker
-    if (showingPeakMarker && peakLevel > 0.0f)
+    // Draw peak marker with neon glow effect
+    if (showPeak && peak > 0.0f)
     {
-        g.setColour(getColourForLevel(peakLevel).brighter(0.5f));
+        // Use a more prominent color for peak indicator
+        juce::Colour peakColour = meterColourHigh.brighter(0.2f);
         
         if (isVertical)
         {
-            auto peakY = bounds.getBottom() - (bounds.getHeight() * peakLevel);
-            g.fillRect(bounds.getX(), peakY - 1.0f, bounds.getWidth(), 2.0f);
+            auto peakY = bounds.getBottom() - bounds.getHeight() * peak;
+            
+            // Draw glow
+            g.setColour(peakColour.withAlpha(0.5f));
+            g.fillRect(bounds.getX(), peakY - 2.0f, bounds.getWidth(), 4.0f);
+            
+            // Draw peak line
+            g.setColour(juce::Colours::white);
+            g.fillRect(bounds.getX() + 1.0f, peakY, bounds.getWidth() - 2.0f, 1.0f);
         }
         else
         {
-            auto peakX = bounds.getX() + (bounds.getWidth() * peakLevel);
-            g.fillRect(peakX - 1.0f, bounds.getY(), 2.0f, bounds.getHeight());
+            auto peakX = bounds.getX() + bounds.getWidth() * peak;
+            
+            // Draw glow
+            g.setColour(peakColour.withAlpha(0.5f));
+            g.fillRect(peakX - 2.0f, bounds.getY(), 4.0f, bounds.getHeight());
+            
+            // Draw peak line
+            g.setColour(juce::Colours::white);
+            g.fillRect(peakX, bounds.getY() + 1.0f, 1.0f, bounds.getHeight() - 2.0f);
         }
     }
-    
-    // Draw outline
-    g.setColour(findColour(outlineColourId));
-    g.drawRoundedRectangle(bounds, 2.0f, 1.0f);
     
     // Draw dB markings with fixed font size and positioning
     g.setColour(findColour(outlineColourId));
     
-    // Create font with simple approach that avoids deprecation warnings
-    auto font = 10.0f; // Default font size
-    g.setFont(font);
+    // Create font with modern approach
+    g.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(10.0f));
     
     // Fixed width for labels to prevent scrunching
     const int labelWidth = 30;
@@ -137,111 +230,168 @@ void LevelMeter::resized()
 //==============================================================================
 void LevelMeter::setLevel(float newLevel)
 {
-    // Ensure level is between 0 and 1
+    // Clamp level to 0.0-1.0 range
     newLevel = juce::jlimit(0.0f, 1.0f, newLevel);
     
-    // Always update level to ensure we get fresh values
-    level = newLevel;
+    // Detect significant level drop (like when gain is turned down)
+    bool significantDrop = (newLevel < level * 0.5f) && (level - newLevel > 0.1f);
     
-    // Update peak level if new level is higher
-    if (level > peakLevel)
-        peakLevel = level;
+    // Special case for silence or extremely low levels (approaching -inf dB)
+    bool nearSilence = newLevel < 0.0001f; // ~-80dB
     
-    hasBeenUpdatedSinceLastDecay = true;
+    // Special case for clipping - we're at or very near max level
+    bool isClipping = newLevel > 0.99f;
     
-    // Always repaint to ensure smooth updates
-    repaint();
+    // Check if clipping stopped (using member variable instead of static)
+    bool clippingStopped = wasClipping && !isClipping;
+    wasClipping = isClipping;
+    
+    if (level != newLevel || clippingStopped) {
+        // Store previous level to detect drops
+        float prevLevel = level;
+        level = newLevel;
+        
+        // Update peak level if new level is higher
+        if (level > peak)
+            peak = level;
+        
+        // Important: When clipping stops, force peak to start decaying
+        if (clippingStopped) {
+            // Set peak to a slightly lower value to unstick it from the top
+            peak = 0.98f;
+        }
+        
+        // Force peak to follow level when level drops significantly
+        if (significantDrop) {
+            // Move peak down with the level but keep a bit of visual delay
+            peak = juce::jmax(level * 1.2f, peak * 0.5f);
+        }
+        
+        // Force peak to exactly match level for near-silence case (master turned down to -inf)
+        if (nearSilence) {
+            // Immediately drop peak to match level for -inf scenarios
+            peak = level;
+        }
+            
+        hasBeenUpdatedSinceLastDecay = true;
+        repaint();
+    }
 }
 
-float LevelMeter::getLevel() const
+void LevelMeter::setVertical(bool shouldBeVertical)
 {
-    return level;
-}
-
-void LevelMeter::setVertical(bool vertical)
-{
-    if (isVertical != vertical)
-    {
-        isVertical = vertical;
+    if (isVertical != shouldBeVertical) {
+        isVertical = shouldBeVertical;
         repaint();
     }
 }
 
 void LevelMeter::showPeakMarker(bool shouldShowPeakMarker)
 {
-    if (showingPeakMarker != shouldShowPeakMarker)
+    if (showPeak != shouldShowPeakMarker)
     {
-        showingPeakMarker = shouldShowPeakMarker;
+        showPeak = shouldShowPeakMarker;
         repaint();
     }
 }
 
 void LevelMeter::setDecayRates(float newLevelDecayRate, float newPeakDecayRate)
 {
-    levelDecayRate = newLevelDecayRate;
+    meterDecayRate = newLevelDecayRate;
     peakDecayRate = newPeakDecayRate;
 }
 
-void LevelMeter::setMeterColour(juce::Colour newLowColour, juce::Colour newMidColour, juce::Colour newHighColour)
+void LevelMeter::setMeterColour(juce::Colour low, juce::Colour mid, juce::Colour high)
 {
-    lowColour = newLowColour;
-    midColour = newMidColour;
-    highColour = newHighColour;
+    meterColourLow = low;
+    meterColourMid = mid;
+    meterColourHigh = high;
     repaint();
 }
 
 //==============================================================================
-juce::Colour LevelMeter::getColourForLevel(float lvl)
+juce::Colour LevelMeter::getColourForLevel(float levelValue)
 {
-    // Determine color based on level:
-    // 0.0 to 0.6: gradient from lowColour to midColour
-    // 0.6 to 1.0: gradient from midColour to highColour
-    
-    if (lvl < 0.6f)
-    {
-        auto ratio = lvl / 0.6f;
-        return lowColour.interpolatedWith(midColour, ratio);
-    }
+    if (levelValue < lowThreshold)
+        return meterColourLow;
+    else if (levelValue < highThreshold)
+        return meterColourMid.interpolatedWith(meterColourLow, (highThreshold - levelValue) / (highThreshold - lowThreshold));
     else
-    {
-        auto ratio = (lvl - 0.6f) / 0.4f;
-        return midColour.interpolatedWith(highColour, ratio);
-    }
+        return meterColourHigh.interpolatedWith(meterColourMid, (1.0f - levelValue) / (1.0f - highThreshold));
 }
 
 void LevelMeter::updatePeakAndDecay()
 {
-    auto currentTime = static_cast<float>(juce::Time::getMillisecondCounterHiRes());
-    float elapsedSec = (currentTime - lastUpdateTime) / 1000.0f;
-    lastUpdateTime = currentTime;
+    // Calculate elapsed time since last update
+    auto now = static_cast<float>(juce::Time::getMillisecondCounterHiRes());
+    float elapsedMs = now - lastUpdateTime;
+    lastUpdateTime = now;
     
-    // Limit elapsed time to avoid huge jumps if app was suspended
-    elapsedSec = juce::jmin(elapsedSec, 0.05f);
+    // Convert to seconds for decay calculations
+    float elapsedSec = elapsedMs / 1000.0f;
     
-    if (elapsedSec > 0.0f)
+    if (hasBeenUpdatedSinceLastDecay)
     {
-        // Apply level decay (only if no new level has been set)
-        if (!hasBeenUpdatedSinceLastDecay)
+        hasBeenUpdatedSinceLastDecay = false;
+    }
+    else
+    {
+        // Apply level decay when no recent updates
+        if (level > 0.0f)
         {
-            float decayAmount = levelDecayRate * elapsedSec;
+            // Apply logarithmic decay to the level (in dB)
             float dbLevel = juce::Decibels::gainToDecibels(level);
-            dbLevel -= decayAmount;
-            level = juce::Decibels::decibelsToGain(dbLevel);
+            float dbDecayAmount = meterDecayRate * elapsedSec;
+            dbLevel -= dbDecayAmount;
+            
+            // Ensure level goes to zero when it gets very low
+            if (dbLevel < -70.0f)
+                level = 0.0f;
+            else
+                level = juce::Decibels::decibelsToGain(dbLevel);
         }
         
-        // Always apply peak decay if peak is higher than level
-        if (peakLevel > level)
+        // Always apply peak decay - make sure peaks fall even after clipping
+        if (peak > 0.0f)
         {
+            // Always decay peak regardless of level
             float peakDecayAmount = peakDecayRate * elapsedSec;
-            float dbPeakLevel = juce::Decibels::gainToDecibels(peakLevel);
+            
+            // If peak is at max or near max (clipping), use a MUCH faster decay rate
+            if (peak >= 0.95f) {
+                // Use an even faster decay rate for peaks at max
+                peakDecayAmount *= 3.0f;
+                
+                // Apply direct reduction to help unstick from top
+                peak *= 0.99f;
+            }
+                
+            float dbPeakLevel = juce::Decibels::gainToDecibels(peak);
             dbPeakLevel -= peakDecayAmount;
-            peakLevel = juce::Decibels::decibelsToGain(dbPeakLevel);
-        }
-        else
-        {
-            peakLevel = level;
+            
+            // Apply faster decay when level is very low
+            if (level < 0.01f)
+                dbPeakLevel -= peakDecayAmount * 2.0f; // Double decay rate for low levels
+            
+            // Ensure peak goes to zero when it gets very low - use higher threshold
+            if (dbPeakLevel < -60.0f || (level < 0.01f && peak < 0.03f))
+                peak = 0.0f;
+            else
+                peak = juce::Decibels::decibelsToGain(dbPeakLevel);
+                
+            // Ensure peak is never less than level UNLESS we're at max level 
+            // This allows peak to fall from the top even if we're still clipping
+            if (peak < level && level < 0.9f)
+                peak = level;
         }
     }
-    
+}
+
+// Add a method to completely reset the meter (for when master is turned to -inf)
+void LevelMeter::reset()
+{
+    level = 0.0f;
+    peak = 0.0f;
     hasBeenUpdatedSinceLastDecay = false;
+    repaint();
 } 

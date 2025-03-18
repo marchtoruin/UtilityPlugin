@@ -15,9 +15,9 @@ BEGIN
   BEGIN
     BLOCK "040904E4"
     BEGIN
-      VALUE "FileDescription",  "Justin's Stereo Sculptor\0"
+      VALUE "FileDescription",  "JustinsStereoSculptor\0"
       VALUE "FileVersion",  "1.0.0\0"
-      VALUE "ProductName",  "Justin's Stereo Sculptor\0"
+      VALUE "ProductName",  "JustinsStereoSculptor\0"
       VALUE "ProductVersion",  "1.0.0\0"
     END
   END

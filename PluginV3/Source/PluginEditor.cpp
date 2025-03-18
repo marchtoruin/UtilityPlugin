@@ -8,22 +8,37 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     // Set up the level meters
     leftMeter.setVertical(true);
     leftMeter.showPeakMarker(true);
-    leftMeter.setMeterColour(juce::Colours::green, juce::Colours::yellow, juce::Colours::red);
+    leftMeter.setMeterColour(juce::Colour(0xFF00DCDC), juce::Colour(0xFF9EFFFF), juce::Colour(0xFFFF3B96));
     addAndMakeVisible(leftMeter);
     
     rightMeter.setVertical(true);
     rightMeter.showPeakMarker(true);
-    rightMeter.setMeterColour(juce::Colours::green, juce::Colours::yellow, juce::Colours::red);
+    rightMeter.setMeterColour(juce::Colour(0xFF00DCDC), juce::Colour(0xFF9EFFFF), juce::Colour(0xFFFF3B96));
     addAndMakeVisible(rightMeter);
     
     // Set up meter labels
     leftMeterLabel.setText("L", juce::dontSendNotification);
     leftMeterLabel.setJustificationType(juce::Justification::centred);
+    leftMeterLabel.setColour(juce::Label::textColourId, textColour);
     addAndMakeVisible(leftMeterLabel);
     
     rightMeterLabel.setText("R", juce::dontSendNotification);
     rightMeterLabel.setJustificationType(juce::Justification::centred);
+    rightMeterLabel.setColour(juce::Label::textColourId, textColour);
     addAndMakeVisible(rightMeterLabel);
+    
+    // Set up new "Gain" section labels
+    leftRightGainLabel.setText("Gain", juce::dontSendNotification);
+    leftRightGainLabel.setJustificationType(juce::Justification::centred);
+    leftRightGainLabel.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(16.0f));
+    leftRightGainLabel.setColour(juce::Label::textColourId, accentColour);
+    addAndMakeVisible(leftRightGainLabel);
+    
+    midSideGainLabel.setText("Gain", juce::dontSendNotification);
+    midSideGainLabel.setJustificationType(juce::Justification::centred);
+    midSideGainLabel.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(16.0f));
+    midSideGainLabel.setColour(juce::Label::textColourId, secondaryAccentColour);
+    addAndMakeVisible(midSideGainLabel);
     
     // Set up a common function for gain knob setup
     auto setupGainKnob = [this](juce::Slider& knob, juce::Label& label, const juce::String& text, bool isMaster = false) {
@@ -34,11 +49,11 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
         
         // Make master knob use a different color to stand out
         if (isMaster) {
-            knob.setColour(juce::Slider::thumbColourId, juce::Colours::orangered.brighter(0.2f));
-            knob.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::orange.brighter(0.2f));
+            knob.setColour(juce::Slider::thumbColourId, accentColour.brighter(0.2f));
+            knob.setColour(juce::Slider::rotarySliderFillColourId, accentColour);
         } else {
-            knob.setColour(juce::Slider::thumbColourId, juce::Colours::orangered);
-            knob.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::orange);
+            knob.setColour(juce::Slider::thumbColourId, accentColour);
+            knob.setColour(juce::Slider::rotarySliderFillColourId, accentColour.darker(0.2f));
         }
         
         knob.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colours::darkgrey);
@@ -63,6 +78,7 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
         // Label for the knob - don't attach directly to avoid overlap problems
         label.setText(text, juce::dontSendNotification);
         label.setJustificationType(juce::Justification::centred);
+        label.setColour(juce::Label::textColourId, textColour);
         
         // Apply our custom look and feel
         knob.setLookAndFeel(&zeroDBAtNoonLookAndFeel);
@@ -86,8 +102,8 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     midGainKnob.setDoubleClickReturnValue(true, 1.0f); // Reset to 0dB (unity gain) on double click
     midGainKnob.setTextValueSuffix(" dB");
     midGainKnob.setName("Mid Gain");
-    midGainKnob.setColour(juce::Slider::thumbColourId, juce::Colours::purple);
-    midGainKnob.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::mediumpurple);
+    midGainKnob.setColour(juce::Slider::thumbColourId, secondaryAccentColour);
+    midGainKnob.setColour(juce::Slider::rotarySliderFillColourId, secondaryAccentColour.darker(0.2f));
     midGainKnob.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colours::darkgrey);
     
     // Use standard rotary parameters for consistency, with 0° at 12 o'clock
@@ -122,8 +138,8 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     sideGainKnob.setDoubleClickReturnValue(true, 1.0f); // Reset to 0dB (unity gain) on double click
     sideGainKnob.setTextValueSuffix(" dB");
     sideGainKnob.setName("Side Gain");
-    sideGainKnob.setColour(juce::Slider::thumbColourId, juce::Colours::magenta);
-    sideGainKnob.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::hotpink);
+    sideGainKnob.setColour(juce::Slider::thumbColourId, secondaryAccentColour.brighter(0.2f));
+    sideGainKnob.setColour(juce::Slider::rotarySliderFillColourId, secondaryAccentColour);
     sideGainKnob.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colours::darkgrey);
     
     // Use standard rotary parameters for consistency, with 0° at 12 o'clock
@@ -154,9 +170,9 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     
     // Set up enable Mid/Side toggle button
     enableMidSideButton.setButtonText("Enable Mid/Side");
-    enableMidSideButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::hotpink);
+    enableMidSideButton.setColour(juce::ToggleButton::tickColourId, secondaryAccentColour);
     enableMidSideButton.setColour(juce::ToggleButton::tickDisabledColourId, juce::Colours::darkgrey);
-    enableMidSideButton.setColour(juce::ToggleButton::textColourId, juce::Colours::white);
+    enableMidSideButton.setColour(juce::ToggleButton::textColourId, textColour);
     enableMidSideButton.onClick = [this]() {
         // Update the stereo placement visualization when Mid/Side is toggled
         stereoPlacement.repaint();
@@ -166,9 +182,9 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     
     // Set up the link gain button
     linkGainButton.setButtonText("Link L/R");
-    linkGainButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::orangered);
+    linkGainButton.setColour(juce::ToggleButton::tickColourId, accentColour);
     linkGainButton.setColour(juce::ToggleButton::tickDisabledColourId, juce::Colours::darkgrey);
-    linkGainButton.setColour(juce::ToggleButton::textColourId, juce::Colours::white);
+    linkGainButton.setColour(juce::ToggleButton::textColourId, textColour);
     linkGainButton.setLookAndFeel(&customToggleLookAndFeel);
     linkGainButton.onClick = [this]() {
         gainKnobsLinked = linkGainButton.getToggleState();
@@ -179,6 +195,16 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
         }
     };
     addAndMakeVisible(linkGainButton);
+    
+    // Add a special listener for the master gain knob to handle when it's turned to minimum
+    masterGainKnob.onValueChange = [this]() {
+        // If master gain is set very low (near -inf dB), reset the meters entirely
+        if (masterGainKnob.getValue() < 0.0001) {
+            // Force immediate reset of the meters to handle -inf dB properly
+            leftMeter.reset();
+            rightMeter.reset();
+        }
+    };
     
     // Set up value change listeners for the gain knobs to implement linking
     leftGainKnob.onValueChange = [this]() {
@@ -211,9 +237,9 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     
     // Set up phase invert buttons
     invertLeftButton.setButtonText("Invert L Phase");
-    invertLeftButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::orangered);
+    invertLeftButton.setColour(juce::ToggleButton::tickColourId, accentColour);
     invertLeftButton.setColour(juce::ToggleButton::tickDisabledColourId, juce::Colours::darkgrey);
-    invertLeftButton.setColour(juce::ToggleButton::textColourId, juce::Colours::white);
+    invertLeftButton.setColour(juce::ToggleButton::textColourId, textColour);
     invertLeftButton.setLookAndFeel(&customToggleLookAndFeel);
     invertLeftButton.onClick = [this]() {
         // Update the stereo placement visualization when phase inversion changes
@@ -222,9 +248,9 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     addAndMakeVisible(invertLeftButton);
     
     invertRightButton.setButtonText("Invert R Phase");
-    invertRightButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::orangered);
+    invertRightButton.setColour(juce::ToggleButton::tickColourId, accentColour);
     invertRightButton.setColour(juce::ToggleButton::tickDisabledColourId, juce::Colours::darkgrey);
-    invertRightButton.setColour(juce::ToggleButton::textColourId, juce::Colours::white);
+    invertRightButton.setColour(juce::ToggleButton::textColourId, textColour);
     invertRightButton.setLookAndFeel(&customToggleLookAndFeel);
     invertRightButton.onClick = [this]() {
         // Update the stereo placement visualization when phase inversion changes
@@ -238,8 +264,8 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     phaseOffsetSlider.setRange(0.0, 360.0, 0.1);
     phaseOffsetSlider.setDoubleClickReturnValue(true, 0.0);
     phaseOffsetSlider.setName("Phase Offset");
-    phaseOffsetSlider.setColour(juce::Slider::thumbColourId, juce::Colours::cyan);
-    phaseOffsetSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colours::lightblue);
+    phaseOffsetSlider.setColour(juce::Slider::thumbColourId, juce::Colour(0xFF56B6C2));
+    phaseOffsetSlider.setColour(juce::Slider::rotarySliderFillColourId, juce::Colour(0xFF56B6C2).darker(0.2f));
     phaseOffsetSlider.setColour(juce::Slider::rotarySliderOutlineColourId, juce::Colours::darkgrey);
     
     // Use standard rotary parameters for consistency, with 0° at 12 o'clock
@@ -264,6 +290,7 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     
     stereoPlacementLabel.setText("Stereo Placement", juce::dontSendNotification);
     stereoPlacementLabel.setJustificationType(juce::Justification::centred);
+    stereoPlacementLabel.setColour(juce::Label::textColourId, textColour);
     addAndMakeVisible(stereoPlacementLabel);
     
     // Connect controls to parameters
@@ -306,46 +333,46 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     setupGainKnob(rightGainKnob, rightGainLabel, "Right");
     
     // Force display labels to show "0.0 dB" at startup
-    masterGainDisplay.setFont(juce::Font(juce::Font::getDefaultSansSerifFontName(), 14.0f, juce::Font::plain));
+    masterGainDisplay.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(14.0f));
     masterGainDisplay.setText("0.0 dB", juce::dontSendNotification);
     masterGainDisplay.setJustificationType(juce::Justification::centred);
-    masterGainDisplay.setColour(juce::Label::textColourId, juce::Colours::white);
+    masterGainDisplay.setColour(juce::Label::textColourId, textColour);
     masterGainDisplay.setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(masterGainDisplay);
     
     // Add a display for phase offset
-    phaseOffsetDisplay.setFont(juce::Font(juce::Font::getDefaultSansSerifFontName(), 14.0f, juce::Font::plain));
+    phaseOffsetDisplay.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(14.0f));
     phaseOffsetDisplay.setText("0.0°", juce::dontSendNotification);
     phaseOffsetDisplay.setJustificationType(juce::Justification::centred);
-    phaseOffsetDisplay.setColour(juce::Label::textColourId, juce::Colours::white);
+    phaseOffsetDisplay.setColour(juce::Label::textColourId, textColour);
     phaseOffsetDisplay.setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(phaseOffsetDisplay);
     
-    leftGainDisplay.setFont(juce::Font(juce::Font::getDefaultSansSerifFontName(), 14.0f, juce::Font::plain));
+    leftGainDisplay.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(14.0f));
     leftGainDisplay.setText("0.0 dB", juce::dontSendNotification);
     leftGainDisplay.setJustificationType(juce::Justification::centred);
-    leftGainDisplay.setColour(juce::Label::textColourId, juce::Colours::white);
+    leftGainDisplay.setColour(juce::Label::textColourId, textColour);
     leftGainDisplay.setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(leftGainDisplay);
     
-    rightGainDisplay.setFont(juce::Font(juce::Font::getDefaultSansSerifFontName(), 14.0f, juce::Font::plain));
+    rightGainDisplay.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(14.0f));
     rightGainDisplay.setText("0.0 dB", juce::dontSendNotification);
     rightGainDisplay.setJustificationType(juce::Justification::centred);
-    rightGainDisplay.setColour(juce::Label::textColourId, juce::Colours::white);
+    rightGainDisplay.setColour(juce::Label::textColourId, textColour);
     rightGainDisplay.setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(rightGainDisplay);
     
-    midGainDisplay.setFont(juce::Font(juce::Font::getDefaultSansSerifFontName(), 14.0f, juce::Font::plain));
+    midGainDisplay.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(14.0f));
     midGainDisplay.setText("0.0 dB", juce::dontSendNotification);
     midGainDisplay.setJustificationType(juce::Justification::centred);
-    midGainDisplay.setColour(juce::Label::textColourId, juce::Colours::white);
+    midGainDisplay.setColour(juce::Label::textColourId, textColour);
     midGainDisplay.setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(midGainDisplay);
     
-    sideGainDisplay.setFont(juce::Font(juce::Font::getDefaultSansSerifFontName(), 14.0f, juce::Font::plain));
+    sideGainDisplay.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(14.0f));
     sideGainDisplay.setText("0.0 dB", juce::dontSendNotification);
     sideGainDisplay.setJustificationType(juce::Justification::centred);
-    sideGainDisplay.setColour(juce::Label::textColourId, juce::Colours::white);
+    sideGainDisplay.setColour(juce::Label::textColourId, textColour);
     sideGainDisplay.setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(sideGainDisplay);
     
@@ -379,23 +406,45 @@ PluginV3AudioProcessorEditor::~PluginV3AudioProcessorEditor()
 //==============================================================================
 void PluginV3AudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // Fill the background
+    // Create a clean, dark background
     g.fillAll(backgroundColour);
     
-    // Draw a border around the plugin
-    g.setColour(juce::Colours::white.withAlpha(0.2f));
-    g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(5.0f), 5.0f, 2.0f);
+    // Draw 80s-style grid
+    g.setColour(gridColour);
     
-    // Draw a title for the plugin
-    g.setColour(juce::Colours::white);
-    g.setFont(juce::Font(juce::Font::getDefaultSansSerifFontName(), 18.0f, juce::Font::plain));
-    g.drawText("Justin's Stereo Sculptor", getLocalBounds().removeFromTop(30), juce::Justification::centred, true);
+    // Horizontal grid lines
+    int gridSpacing = 20;
+    for (int y = gridSpacing; y < getHeight(); y += gridSpacing) {
+        g.drawLine(0, y, getWidth(), y, 1.0f);
+    }
+    
+    // Vertical grid lines
+    for (int x = gridSpacing; x < getWidth(); x += gridSpacing) {
+        g.drawLine(x, 0, x, getHeight(), 1.0f);
+    }
+    
+    // Draw a stylish border around the plugin
+    g.setColour(accentColour.withAlpha(0.3f));
+    g.drawRoundedRectangle(getLocalBounds().toFloat().reduced(3.0f), 3.0f, 2.0f);
+    
+    // Add a glowing accent strip at the top
+    auto topStrip = getLocalBounds().removeFromTop(2).toFloat().reduced(5.0f, 0.0f);
+    g.setColour(accentColour);
+    g.fillRoundedRectangle(topStrip, 1.0f);
+    
+    // Draw a title for the plugin with 80s style
+    g.setFont(juce::Font(juce::Font::FontStyleFlags::bold).withHeight(24.0f));
+    
+    // Draw text with glow effect
+    g.setColour(secondaryAccentColour.withAlpha(0.7f));
+    g.drawText("Justins Stereo Sculptor", getLocalBounds().removeFromTop(35).translated(1, 1), juce::Justification::centred, true);
+    
+    g.setColour(accentColour); // Cyan title
+    g.drawText("Justins Stereo Sculptor", getLocalBounds().removeFromTop(33), juce::Justification::centred, true);
 }
 
 void PluginV3AudioProcessorEditor::resized()
 {
-    // This is generally called when the component is resized.
-    // Update the bounds of our child components.
     auto bounds = getLocalBounds().reduced(20);
     
     // Main area width/height
@@ -442,56 +491,21 @@ void PluginV3AudioProcessorEditor::resized()
     // Add spacing between sections
     const int knobVerticalOffset = static_cast<int>(height * 0.05f);
     
-    // Position left/right knobs
-    auto leftKnobBounds = juce::Rectangle<int>(
-        leftArea.getCentreX() - knobSize / 2,
-        leftArea.getCentreY() - knobSize / 2 - knobVerticalOffset,
-        knobSize,
-        knobSize
-    );
-    leftGainKnob.setBounds(leftKnobBounds);
-    
-    // Position the label above the knob
-    leftGainLabel.setBounds(
-        leftKnobBounds.getX(),
-        leftKnobBounds.getY() - labelHeight - 5,
-        leftKnobBounds.getWidth(),
-        labelHeight
+    // Position the "Gain" label for Mid/Side section (above both mid and side knobs)
+    midSideGainLabel.setBounds(
+        midArea.getX(),
+        midArea.getY() + 10, // Position at top of mid/side area with a bit of padding
+        midArea.getWidth() + sideArea.getWidth(), // Span both Mid and Side areas
+        30 // Make it slightly taller for emphasis
     );
     
-    // Position custom display label under knob
-    auto leftDisplayBounds = juce::Rectangle<int>(
-        leftKnobBounds.getX(), 
-        leftKnobBounds.getBottom() + 5, 
-        leftKnobBounds.getWidth(), 
-        20
+    // Position the "Gain" label for Left/Right section (above both left and right knobs)
+    leftRightGainLabel.setBounds(
+        leftArea.getX(),
+        leftArea.getY() + 10, // Position at top of left/right area with a bit of padding
+        leftArea.getWidth() + rightArea.getWidth(), // Span both Left and Right areas
+        30 // Make it slightly taller for emphasis
     );
-    leftGainDisplay.setBounds(leftDisplayBounds);
-    
-    auto rightKnobBounds = juce::Rectangle<int>(
-        rightArea.getCentreX() - knobSize / 2,
-        rightArea.getCentreY() - knobSize / 2 - knobVerticalOffset,
-        knobSize,
-        knobSize
-    );
-    rightGainKnob.setBounds(rightKnobBounds);
-    
-    // Position the label above the knob
-    rightGainLabel.setBounds(
-        rightKnobBounds.getX(),
-        rightKnobBounds.getY() - labelHeight - 5,
-        rightKnobBounds.getWidth(),
-        labelHeight
-    );
-    
-    // Position custom display label under knob
-    auto rightDisplayBounds = juce::Rectangle<int>(
-        rightKnobBounds.getX(), 
-        rightKnobBounds.getBottom() + 5, 
-        rightKnobBounds.getWidth(), 
-        20
-    );
-    rightGainDisplay.setBounds(rightDisplayBounds);
     
     // Position Mid/Side knobs
     auto midKnobBounds = juce::Rectangle<int>(
@@ -544,6 +558,57 @@ void PluginV3AudioProcessorEditor::resized()
     );
     sideGainDisplay.setBounds(sideDisplayBounds);
     
+    // Position left/right knobs
+    auto leftKnobBounds = juce::Rectangle<int>(
+        leftArea.getCentreX() - knobSize / 2,
+        leftArea.getCentreY() - knobSize / 2 - knobVerticalOffset,
+        knobSize,
+        knobSize
+    );
+    leftGainKnob.setBounds(leftKnobBounds);
+    
+    // Position the label above the knob
+    leftGainLabel.setBounds(
+        leftKnobBounds.getX(),
+        leftKnobBounds.getY() - labelHeight - 5,
+        leftKnobBounds.getWidth(),
+        labelHeight
+    );
+    
+    // Position custom display label under knob
+    auto leftDisplayBounds = juce::Rectangle<int>(
+        leftKnobBounds.getX(), 
+        leftKnobBounds.getBottom() + 5, 
+        leftKnobBounds.getWidth(), 
+        20
+    );
+    leftGainDisplay.setBounds(leftDisplayBounds);
+    
+    auto rightKnobBounds = juce::Rectangle<int>(
+        rightArea.getCentreX() - knobSize / 2,
+        rightArea.getCentreY() - knobSize / 2 - knobVerticalOffset,
+        knobSize,
+        knobSize
+    );
+    rightGainKnob.setBounds(rightKnobBounds);
+    
+    // Position the label above the knob
+    rightGainLabel.setBounds(
+        rightKnobBounds.getX(),
+        rightKnobBounds.getY() - labelHeight - 5,
+        rightKnobBounds.getWidth(),
+        labelHeight
+    );
+    
+    // Position custom display label under knob
+    auto rightDisplayBounds = juce::Rectangle<int>(
+        rightKnobBounds.getX(), 
+        rightKnobBounds.getBottom() + 5, 
+        rightKnobBounds.getWidth(), 
+        20
+    );
+    rightGainDisplay.setBounds(rightDisplayBounds);
+    
     // Calculate meters height and position to align the bottom with the bottom row knobs
     auto metersHeight = static_cast<int>(height * 0.6f);
     auto metersBottom = std::max(leftKnobBounds.getBottom(), midKnobBounds.getBottom());
@@ -551,7 +616,7 @@ void PluginV3AudioProcessorEditor::resized()
     
     // Split meters area exactly in half to ensure equal width
     auto leftMeterBounds = metersArea.removeFromLeft(static_cast<int>(metersArea.getWidth() / 2))
-                           .withHeight(metersHeight).withY(metersYPos);
+                          .withHeight(metersHeight).withY(metersYPos);
     auto rightMeterBounds = metersArea.withHeight(metersHeight).withY(metersYPos);
     
     leftMeter.setBounds(leftMeterBounds);
@@ -706,9 +771,20 @@ void PluginV3AudioProcessorEditor::timerCallback()
     auto leftLevel = audioProcessor.getLeftChannelLevel();
     auto rightLevel = audioProcessor.getRightChannelLevel();
     
-    // Update the meters
-    leftMeter.setLevel(leftLevel);
-    rightMeter.setLevel(rightLevel);
+    // Check if master gain is at minimum (-inf dB)
+    float masterValue = masterGainKnob.getValue();
+    bool isMasterMuted = masterValue < 0.0001f;
+    
+    // Update the meters or reset them if master is muted
+    if (isMasterMuted) {
+        // Force meters to zero when master is at -inf
+        leftMeter.reset();
+        rightMeter.reset();
+    } else {
+        // Update with current levels
+        leftMeter.setLevel(leftLevel);
+        rightMeter.setLevel(rightLevel);
+    }
     
     // Update custom display labels based on slider values
     auto updateGainDisplay = [](juce::Slider& slider, juce::Label& display) {

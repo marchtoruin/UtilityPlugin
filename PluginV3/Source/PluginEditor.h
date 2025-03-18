@@ -13,32 +13,50 @@ public:
                          bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override
     {
         auto bounds = button.getLocalBounds().reduced(2);
-        auto cornerSize = 6.0f;
+        auto cornerSize = 3.0f;
         
-        // Draw the background with rounded corners - make it more prominent when on
-        g.setColour(button.findColour(juce::ToggleButton::tickDisabledColourId)
-                   .withAlpha(button.getToggleState() ? 0.2f : 0.1f));
-        g.fillRoundedRectangle(bounds.toFloat(), cornerSize);
+        // Get button color
+        auto buttonColor = button.findColour(juce::ToggleButton::tickColourId);
         
-        // Draw the border
-        g.setColour(button.findColour(juce::ToggleButton::tickColourId)
-                   .withAlpha(button.getToggleState() ? 0.8f : 0.3f));
-        g.drawRoundedRectangle(bounds.toFloat().reduced(0.5f), cornerSize, 1.0f);
-        
-        // Draw text
-        g.setColour(button.findColour(juce::ToggleButton::textColourId)
-                   .withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.6f));
-        g.setFont(juce::Font(juce::Font::getDefaultSansSerifFontName(), 14.0f, juce::Font::plain));
-        
-        if (button.getToggleState())
-        {
-            // When toggled, use the tick color instead of changing the font
-            g.setColour(button.findColour(juce::ToggleButton::tickColourId));
+        // Draw background
+        if (button.getToggleState()) {
+            // When on, use a darker fill with neon border
+            g.setColour(buttonColor.withAlpha(0.3f));
+            g.fillRect(bounds.toFloat());
+            
+            // Neon border when on
+            g.setColour(buttonColor);
+            g.drawRect(bounds.toFloat(), 1.5f);
+        } else {
+            // When off, draw a dark background with subtle outline
+            g.setColour(juce::Colour(0xFF0F0F1A));
+            g.fillRect(bounds.toFloat());
+            
+            // Subtle border when off
+            g.setColour(buttonColor.withAlpha(0.4f));
+            g.drawRect(bounds.toFloat(), 1.0f);
         }
         
-        // Draw the text, accounting for the toggle box
-        auto textBounds = bounds;
-        g.drawText(button.getButtonText(), textBounds, juce::Justification::centred, true);
+        // Draw highlight when hovered/pressed
+        if (shouldDrawButtonAsHighlighted || shouldDrawButtonAsDown) {
+            g.setColour(buttonColor.withAlpha(shouldDrawButtonAsDown ? 0.4f : 0.2f));
+            g.fillRect(bounds.toFloat().reduced(1.0f));
+        }
+        
+        // Draw text with 80s style
+        if (button.getToggleState()) {
+            // When toggled on, text gets a neon glow
+            g.setColour(buttonColor.withAlpha(0.4f));
+            g.setFont(juce::Font(juce::Font::FontStyleFlags::bold).withHeight(14.0f));
+            g.drawText(button.getButtonText(), bounds.translated(0, 1), juce::Justification::centred, false);
+            
+            g.setColour(buttonColor.brighter(0.5f));
+        } else {
+            g.setColour(juce::Colours::white.withAlpha(0.7f));
+        }
+        
+        g.setFont(juce::Font(juce::Font::FontStyleFlags::plain).withHeight(14.0f));
+        g.drawText(button.getButtonText(), bounds, juce::Justification::centred, false);
     }
 };
 
@@ -94,21 +112,56 @@ public:
         auto rw = radius * 2.0f;
         auto angle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
         
-        // Background - use dark grey that matches the plugin background instead of outline color
-        // For Phase Offset, use black background
-        if (slider.getName().contains("Phase"))
-            g.setColour(juce::Colours::black.withAlpha(0.8f));
-        else
-            g.setColour(juce::Colours::darkgrey.darker(0.8f));
-            
+        // 80s-style background - darker version of the plugin background
+        g.setColour(juce::Colour(0xFF0F0F1A));
         g.fillEllipse(rx, ry, rw, rw);
         
-        // Add thin black outline to all knobs
-        g.setColour(juce::Colours::black);
-        g.drawEllipse(rx, ry, rw, rw, 1.0f);
+        // Draw neon outline
+        auto knobColor = slider.findColour(juce::Slider::rotarySliderFillColourId);
+        g.setColour(knobColor.withAlpha(0.5f));
+        g.drawEllipse(rx, ry, rw, rw, 1.5f);
         
         // Calculate the noon position (Unity Gain / 0dB position)
         const float noonAngle = 0.0f; // 12 o'clock is at 0 radians
+        
+        // Draw tick marks with 80s neon look
+        g.setColour(knobColor.withAlpha(0.4f));
+        for (int i = 0; i < 8; i++) {
+            float tickAngle = rotaryStartAngle + (i / 8.0f) * (rotaryEndAngle - rotaryStartAngle);
+            float innerRadius = radius * 0.7f;
+            float outerRadius = radius * 0.9f;
+            
+            juce::Point<float> start(
+                centerX + innerRadius * std::cos(tickAngle),
+                centerY + innerRadius * std::sin(tickAngle)
+            );
+            
+            juce::Point<float> end(
+                centerX + outerRadius * std::cos(tickAngle),
+                centerY + outerRadius * std::sin(tickAngle)
+            );
+            
+            g.drawLine(start.x, start.y, end.x, end.y, 1.0f);
+        }
+        
+        // Extra mark at 0dB position (noon) - more prominent
+        if (!slider.getName().contains("Phase")) {
+            g.setColour(knobColor);
+            float innerRadius = radius * 0.7f;
+            float outerRadius = radius * 0.95f;
+            
+            juce::Point<float> start(
+                centerX + innerRadius * std::cos(noonAngle),
+                centerY + innerRadius * std::sin(noonAngle)
+            );
+            
+            juce::Point<float> end(
+                centerX + outerRadius * std::cos(noonAngle),
+                centerY + outerRadius * std::sin(noonAngle)
+            );
+            
+            g.drawLine(start.x, start.y, end.x, end.y, 1.5f);
+        }
         
         // Fill arc - only if not at unity gain and not the phase knob
         if (slider.isEnabled() && (!atUnityGain || slider.getName().contains("Phase"))) {
@@ -129,14 +182,19 @@ public:
                 }
             }
             
-            g.setColour(slider.findColour(juce::Slider::rotarySliderFillColourId));
+            // Fill with neon glow effect
+            g.setColour(knobColor.withAlpha(0.3f));
             g.fillPath(valueArc);
+            
+            // Add a neon outline to the arc
+            g.setColour(knobColor);
+            g.strokePath(valueArc, juce::PathStrokeType(2.0f));
         }
         
-        // Draw line indicator
+        // Draw neon indicator line
         juce::Path p;
-        auto lineLength = radius * 0.8f;     // Length of the indicator line
-        auto lineThickness = 2.5f;           // Thickness of the indicator line
+        auto lineLength = radius * 0.7f;
+        auto lineThickness = 2.0f;
         
         // Draw indicator line
         p.addRectangle(-lineThickness * 0.5f, -radius, lineThickness, lineLength);
@@ -144,17 +202,21 @@ public:
         // Rotate indicator line to the correct angle
         p.applyTransform(juce::AffineTransform::rotation(angle).translated(centerX, centerY));
         
-        // Use the fill color for the indicator instead of thumb color
-        if (atUnityGain && !slider.getName().contains("Phase"))
-            g.setColour(juce::Colours::white.withAlpha(0.7f)); // White indicator at unity gain
-        else
-            g.setColour(slider.findColour(juce::Slider::rotarySliderFillColourId));
-        
+        // Bright neon color for the indicator
+        g.setColour(knobColor.brighter(0.5f));
         g.fillPath(p);
         
-        // Draw center dot
-        g.setColour(juce::Colours::white.withAlpha(0.5f));
-        g.fillEllipse(centerX - 2.0f, centerY - 2.0f, 4.0f, 4.0f);
+        // Add a glow effect to the indicator
+        g.setColour(knobColor.withAlpha(0.3f));
+        juce::Path glowPath = p;
+        glowPath.addRectangle(-lineThickness * 2.0f, -radius, lineThickness * 4.0f, lineLength);
+        g.fillPath(glowPath);
+        
+        // Draw center dot with neon appearance
+        g.setColour(knobColor.darker(0.2f));
+        g.fillEllipse(centerX - 3.0f, centerY - 3.0f, 6.0f, 6.0f);
+        g.setColour(knobColor.brighter(0.5f));
+        g.fillEllipse(centerX - 1.5f, centerY - 1.5f, 3.0f, 3.0f);
     }
 };
 
@@ -216,12 +278,12 @@ public:
         auto centerX = bounds.getCentreX();
         auto centerY = bounds.getCentreY();
         
-        // Draw background ellipse
-        g.setColour(juce::Colours::darkgrey.withAlpha(0.3f));
+        // Draw dark background
+        g.setColour(juce::Colour(0xFF0F0F1A));
         g.fillEllipse(bounds);
         
-        // Draw concentric rings
-        g.setColour(juce::Colours::lightgrey.withAlpha(0.2f));
+        // Draw 80s grid circles
+        g.setColour(juce::Colour(0xFF2A2A40));
         for (float radius = 0.2f; radius <= 1.0f; radius += 0.2f)
         {
             g.drawEllipse(
@@ -233,14 +295,23 @@ public:
             );
         }
         
-        // Draw left and right channel markings
-        g.setFont(12.0f);
-        g.drawText("L", static_cast<int>(bounds.getX()), static_cast<int>(centerY - 6.0f), 20, 12, juce::Justification::centred);
-        g.drawText("R", static_cast<int>(bounds.getRight() - 20.0f), static_cast<int>(centerY - 6.0f), 20, 12, juce::Justification::centred);
+        // Draw center crosshair with neon effect
+        float crossSize = width * 0.5f;
         
-        // Draw the center line
-        g.setColour(juce::Colours::lightgrey.withAlpha(0.5f));
-        g.drawLine(centerX, bounds.getY(), centerX, bounds.getBottom(), 1.0f);
+        // Horizontal line
+        g.setColour(juce::Colour(0xFF00DCDC).withAlpha(0.6f));
+        g.drawLine(centerX - crossSize, centerY, centerX + crossSize, centerY, 1.0f);
+        
+        // Vertical line
+        g.drawLine(centerX, centerY - crossSize, centerX, centerY + crossSize, 1.0f);
+        
+        // Draw left and right channel markings with neon effect
+        g.setFont(juce::Font(juce::Font::FontStyleFlags::bold).withHeight(14.0f));
+        
+        // Draw L and R labels
+        g.setColour(juce::Colour(0xFF00DCDC)); // Cyan
+        g.drawText("L", static_cast<int>(bounds.getX()), static_cast<int>(centerY - 8), 20, 16, juce::Justification::centred);
+        g.drawText("R", static_cast<int>(bounds.getRight() - 20), static_cast<int>(centerY - 8), 20, 16, juce::Justification::centred);
         
         // Draw the stereo position indicator
         float normalizedPosition = stereoPosition;
@@ -249,14 +320,27 @@ public:
         float indicatorX = bounds.getX() + width * normalizedPosition;
         float indicatorY = centerY;
         
-        // Draw a line from center to the position
-        g.setColour(juce::Colours::orange.withAlpha(0.7f));
+        // Draw a line from center to the position with neon effect
+        g.setColour(juce::Colour(0xFFFF3B96)); // Magenta
         g.drawLine(centerX, centerY, indicatorX, indicatorY, 2.0f);
         
-        // Draw the indicator dot
-        float dotSize = 10.0f * normalizedIntensity;
-        g.setColour(juce::Colours::orange);
-        g.fillEllipse(indicatorX - (dotSize / 2.0f), indicatorY - (dotSize / 2.0f), dotSize, dotSize);
+        // Draw neon glow around position dot
+        float glowSize = 20.0f * normalizedIntensity;
+        g.setColour(juce::Colour(0xFFFF3B96).withAlpha(0.3f));
+        g.fillEllipse(indicatorX - (glowSize/2), indicatorY - (glowSize/2), glowSize, glowSize);
+        
+        // Draw the indicator dot with neon magenta
+        float dotSize = 8.0f * normalizedIntensity;
+        g.setColour(juce::Colour(0xFFFF3B96));
+        g.fillEllipse(indicatorX - (dotSize/2), indicatorY - (dotSize/2), dotSize, dotSize);
+        
+        // Add highlight to the dot for a neon look
+        g.setColour(juce::Colours::white);
+        g.fillEllipse(
+            indicatorX - (dotSize * 0.3f),
+            indicatorY - (dotSize * 0.3f),
+            dotSize * 0.6f, dotSize * 0.6f
+        );
     }
     
 private:
@@ -320,10 +404,14 @@ private:
     juce::ToggleButton enableMidSideButton;
     juce::Label midGainLabel;
     juce::Label sideGainLabel;
+    juce::Label midSideGainLabel;
     
     // Stereo placement visualization
     StereoPlacementComponent stereoPlacement;
     juce::Label stereoPlacementLabel;
+    
+    // Left/Right section label
+    juce::Label leftRightGainLabel;
     
     // Custom gain display labels that we control
     juce::Label masterGainDisplay;
@@ -344,13 +432,15 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sideGainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> enableMidSideAttachment;
     
-    // UI customization
-    juce::Colour backgroundColour { juce::Colours::darkgrey.darker(0.8f) };
+    // Color scheme - 80s inspired
+    juce::Colour backgroundColour { juce::Colour(0xFF181825) }; // Dark blue-black
+    juce::Colour accentColour { juce::Colour(0xFF00DCDC) };     // Cyan
+    juce::Colour secondaryAccentColour { juce::Colour(0xFFFF3B96) }; // Magenta/Pink
+    juce::Colour gridColour { juce::Colour(0xFF2A2A40) };       // Subtle grid color
+    juce::Colour textColour { juce::Colours::white };
     
-    // Custom look and feel for gain knobs that will position 0dB at noon
+    // Custom Look and Feel objects
     ZeroDBAtNoonLookAndFeel zeroDBAtNoonLookAndFeel;
-    
-    // Custom look and feel for toggle buttons
     CustomToggleLookAndFeel customToggleLookAndFeel;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginV3AudioProcessorEditor)

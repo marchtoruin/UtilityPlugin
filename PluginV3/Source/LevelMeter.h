@@ -26,39 +26,52 @@ public:
     void resized() override;
     
     //==============================================================================
-    /** Sets the level to display (0.0 to 1.0) */
-    void setLevel(float level);
+    /** Sets whether the meter is vertical or horizontal */
+    void setVertical(bool shouldBeVertical);
     
-    /** Gets the current level being displayed */
-    float getLevel() const;
+    /** Gets whether the meter is vertical */
+    bool isVerticalMeter() const { return isVertical; }
     
-    /** Sets whether the meter is vertical (true) or horizontal (false) */
-    void setVertical(bool vertical);
-    
-    /** Sets whether the meter should show a peak marker */
+    /** Sets whether to show the peak marker */
     void showPeakMarker(bool shouldShowPeakMarker);
     
+    /** Gets whether the peak marker is shown */
+    bool isPeakMarkerShown() const { return showPeak; }
+    
+    /** Sets the current level for the meter */
+    void setLevel(float newLevel);
+    
+    /** Gets the current level */
+    float getLevel() const { return level; }
+    
+    /** Completely resets the meter and peak to zero */
+    void reset();
+    
     /** Sets the decay rates for the level and peak in dB/second */
-    void setDecayRates(float levelDecayRate, float peakDecayRate);
+    void setDecayRates(float meterDecayRate, float peakDecayRate);
     
     /** Sets the meter's color based on the level value */
-    void setMeterColour(juce::Colour lowColour, juce::Colour midColour, juce::Colour highColour);
+    void setMeterColour(juce::Colour low, juce::Colour mid, juce::Colour high);
     
 private:
+    bool isVertical = false;
     float level = 0.0f;
-    bool isVertical = true;
-    bool showingPeakMarker = true;
+    float peak = 0.0f;
+    bool showPeak = false;
+    float lastUpdateTime = 0.0f;
     bool hasBeenUpdatedSinceLastDecay = false;
+    bool wasClipping = false;
     
-    float peakLevel = 0.0f;
-    float levelDecayRate = 12.0f;  // dB per second
-    float peakDecayRate = 3.0f;    // dB per second
+    // Decay rates in dB/s
+    float meterDecayRate = 36.0f;    // 36dB/second decay for main level
+    float peakDecayRate = 12.0f;     // Slower decay for peak marker
     
-    float lastUpdateTime = 0.0f;   // Changed from juce::Time to float to match implementation
+    juce::Colour meterColourLow;     // Color for low levels (green)
+    juce::Colour meterColourMid;     // Color for mid levels (yellow)
+    juce::Colour meterColourHigh;    // Color for high levels (red)
     
-    juce::Colour lowColour = juce::Colours::green;
-    juce::Colour midColour = juce::Colours::yellow;
-    juce::Colour highColour = juce::Colours::red;
+    float lowThreshold = 0.25f;      // Below this uses the low color
+    float highThreshold = 0.9f;      // Above this uses the high color
     
     juce::Colour getColourForLevel(float level);
     void updatePeakAndDecay();
