@@ -1,0 +1,62 @@
+# JUCE-specific ignores
+**/Builds/*/build/
+**/Builds/*/x64/
+**/Builds/*/.vs/
+**/.vs/
+**/JuceLibraryCode/
+JuceLibraryCode/
+
+# Common build artifacts
+Builds/**/Debug/
+Builds/**/Release/
+*.exe
+*.dll
+*.lib
+*.exp
+*.ilk
+*.pdb
+*.vs
+*.a
+*.o
+*.so
+*.dylib
+*~
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE-specific
+*.user
+*.suo
+*.opensdf
+*.sdf
+*.vcxproj.user
+*.ncb
+
+# JUCE Projucer autosave backups
+*.jucer.bak
+*~.skp
+*~.jucer
+.*~
+
+# Cursor-specific
+.cursor/
+
+# Build directories
+Builds/*/Build/
+
+# Object files and other temporary build artifacts
+*.obj
+*.log
+*.tlog
+*.manifest
+*.idb
+*.db
+*.opendb
+*.blend1
+*.res
+
+# Embedded git repositories
+mcp-check/
+temp-mcp-check/ 

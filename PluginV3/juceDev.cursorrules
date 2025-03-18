@@ -1,0 +1,59 @@
+# JUCE Plugin Development Cursor Rules
+# Last updated: March 15, 2025
+
+## General Coding Standards
+- Follow **JUCE's official coding standards**.
+- Use **C++20 best practices**: smart pointers (`std::unique_ptr`, `std::shared_ptr`), `constexpr`, and modern STL.
+- **Memory Management:** Avoid `new` and `delete`; prefer stack allocation when possible.
+- **Error Handling:** Use `jassert()` for debug assertions in JUCE.
+
+## Code Formatting
+- Use **4 spaces for indentation**, no tabs.
+- Follow **Allman style** for braces (`{` on a new line).
+- No trailing whitespace.
+- Maintain **consistent spacing** around operators and expressions.
+- **Naming Conventions:**
+  - **Classes:** `CamelCase` (e.g., `MyPluginProcessor`).
+  - **Variables & Methods:** `camelCase` (e.g., `applyGain()`).
+  - **Macros:** `ALL_CAPS_WITH_UNDERSCORES` prefixed with `JUCE_`.
+
+## File Organization
+- Separate **header (.h) and source (.cpp) files** for each class.
+- Use **meaningful file names** that reflect functionality.
+- Standard directory structure:
+
+
+## Performance Guidelines
+- **Audio Thread Safety:**
+- No dynamic memory allocation in `processBlock()`.
+- Minimize function calls & branching inside `processBlock()`.
+- Use `juce::dsp::ProcessorChain` where applicable.
+- **UI Efficiency:**
+- Avoid heavy calculations in `paint()`.
+- Use **juce::Timer** or **VBlankAttachment** for smooth UI updates.
+- **Debugging & Testing:**
+- Use `DBG()` for non-audio thread debugging.
+- Enable JUCE_ENABLE_REPAINT_DEBUGGING=1 for UI performance testing.
+- Use **pluginval** (GitHub) for plugin validation.
+
+## Metering Best Practices
+- Ensure meters **accurately reflect dBFS values**.
+- Input meters should display **pre-gain signal**.
+- Output meters should display **post-gain signal**.
+- Peak meters should have **a smooth decay**.
+- Use `juce::LinearSmoothedValue<float>` for proper level smoothing.
+
+## JUCE Plugin-Specific Best Practices
+- **Use JUCE smart pointers** for object management.
+- **Avoid blocking the GUI thread**—use `juce::MessageManager` when interacting with UI elements.
+- **Implement a robust preset system**—store settings using `juce::AudioProcessorValueTreeState`.
+
+## Tools & References
+- **Melatonin Inspector (GitHub)** - UI development & debugging.
+- **pluginval (GitHub)** - Plugin validation & testing.
+- **Pamplejuce Template (GitHub)** - Standard JUCE plugin template.
+- **JUCE Coding Standards (Official Docs)**.
+
+# Notes
+- AI should **strictly follow these guidelines** when generating, refactoring, or debugging JUCE plugin code.
+- Ensure **JUCE-specific APIs** are used where appropriate (e.g., `juce::AudioBuffer<float>` instead of `std::vector<float>`).

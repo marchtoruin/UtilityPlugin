@@ -1,0 +1,143 @@
+# PRD Utility Plugin for Stereo Processing
+
+## 1. Overview & Purpose
+
+### Introduction
+Create a utility plugin designed for precise stereo manipulation and gain control. This plugin provides a suite of tools including
+- LR separate metering
+- LR separate gain
+- Phase invert
+- Phase offset
+- Stereo placement visualization (similar to KHS Stereo)
+- Input and output gain
+- Midside gain
+
+### Goals & Objectives
+- Deliver a tool that offers granular control over stereo audio signals.
+- Provide clear, separate metering and gain controls for leftright channels.
+- Implement advanced phase controls (invert, offset) to resolve phase issues.
+- Allow precise stereo placement visualization and adjustments.
+- Offer inputoutput gain and midside gain adjustments for flexible audio shaping.
+- Roll out features incrementally for robust testing and personal exploration.
+
+## 2. Background & Context
+
+### Technical Context
+- Target Environment Personal use for audio manipulation and detailed stereo imaging.
+- Existing Solutions Refining concepts seen in tools like KHS Stereo, with additional functionality and a more user-friendly interface.
+  
+### Problem Statement
+Balancing stereo imagery, phase issues, and gain inconsistencies in audio can be challenging. This plugin addresses these challenges by offering separate controls and detailed visual feedback.
+
+## 3. Features & Functionality
+
+Implement features one at a time for incremental development and testing
+
+1. LR Separate Metering
+   - Function Display individual level meters for left and right channels.
+   - Purpose Provide real-time visual feedback for balanced channel levels.
+   - Notes Focus on clean, intuitive visuals.
+
+2. LR Separate Gain
+   - Function Adjust gain independently for the left and right channels.
+   - Purpose Enable precise level matching and correction.
+   - Notes Use knobs or slider controls with fine adjustment capabilities.
+
+3. Phase Invert
+   - Function Toggle phase inversion for one or both channels.
+   - Purpose Resolve phase cancellation issues.
+   - Notes Include clear visual indication (e.g., icon change) when phase is inverted.
+
+4. Phase Offset
+   - Function Adjust the phase offset (timing difference) of the channels.
+   - Purpose Provide additional phase correction for complex mixes.
+   - Notes Ensure smooth control for subtle adjustments.
+
+5. Stereo Placement
+   - Function Visualize and adjust the stereo image.
+   - Purpose Allow real-time positioning of sounds within the stereo field.
+   - Notes Develop an interactive interface (e.g., draggable marker on a stereo field diagram).
+
+6. Input and Output Gain
+   - Function Control the overall input and output levels of the plugin.
+   - Purpose Ensure optimal signal flow before and after processing.
+   - Notes Implement clear gain staging with monitoring meters.
+
+7. MidSide Gain
+   - Function Provide separate gain controls for mid and side channels.
+   - Purpose Enable advanced processing for stereo width and balance.
+   - Notes Consider this feature after establishing the basic stereo controls.
+
+## 4. Technical Requirements
+
+### Platform & Environment
+- Plugin Formats Consider VST, AU, and potentially AAX.
+- Supported DAWs Ensure compatibility with major digital audio workstations.
+- Operating Systems Target Windows and macOS.
+
+### Architecture & Design
+- Modular Design Develop each feature as an independent module for easier testing and updates.
+- User Interface Aim for a clean, responsive, and intuitive design with real-time feedback and low latency.
+- Integration Points Define APIs for metering, gain control, and phase manipulation in a modular fashion.
+
+### Performance & Scalability
+- Latency Keep latency minimal for real-time audio processing.
+- Resource Usage Optimize CPU and memory usage, especially when multiple modules are active.
+
+### Security & Compliance
+- Follow best practices for code stability and maintainability.
+- Document any third-party libraries or tools used.
+
+## 5. Milestones & Timeline
+
+Phase 1 Core Development
+- Week 1-2 Setup project framework and develop LR separate metering.
+- Week 3-4 Implement LR separate gain controls.
+
+Phase 2 Phase Controls
+- Week 5-6 Integrate phase invert functionality.
+- Week 7-8 Develop phase offset control with smooth adjustments.
+
+Phase 3 Stereo Imaging
+- Week 9-10 Create the stereo placement visualization interface.
+- Week 11 Add input and output gain controls.
+
+Phase 4 Advanced Processing
+- Week 12 Develop and integrate midside gain controls.
+- Week 13-14 Conduct beta testing, address bugs, and refine user experience.
+
+Final Phase
+- Week 15 Final QA, documentation, and preparation for personal release.
+
+## 6. Risks & Mitigations
+
+### Potential Risks
+- Performance Bottlenecks Complex real-time processing may increase CPU load.
+- User Interface Complexity Balancing advanced features with an intuitive UI may be challenging.
+- Integration Issues Ensuring compatibility across multiple plugin formats and DAWs.
+
+### Mitigation Strategies
+- Performance Regular profiling and optimization.
+- UIUX Testing Frequent usability tests and feedback sessions.
+- Modular Testing Develop and test features in isolation before full integration.
+
+## 7. Success Metrics
+
+### KPIs
+- Performance Benchmarks Achieve low CPU usage and minimal latency during real-time processing.
+- User Feedback Gather constructive feedback on usability and functionality.
+- Stability Monitor and minimize reported bugs during beta testing.
+
+### Feedback Loops
+- Engage in personal testing and adjust based on observed performance and usability.
+- Document feedback and iterate on design improvements.
+
+## 8. Appendices & References
+
+### Documentation & Resources
+- Keep internal design documents and technical notes.
+- Include API documentation for third-party libraries or tools.
+- Record personal observations and testing feedback.
+
+### Team Contacts
+- For personal projects, list any collaborators or reference your own contact info for future reference.
