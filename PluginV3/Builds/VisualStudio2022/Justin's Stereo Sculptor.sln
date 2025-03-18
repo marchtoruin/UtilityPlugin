@@ -2,20 +2,20 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio Version 17
 
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TempName - Standalone Plugin", "TempName_StandalonePlugin.vcxproj", "{F28E0FB6-1DEB-AA6F-C594-AB817542508D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Justin's Stereo Sculptor - Standalone Plugin", "Justin's Stereo Sculptor_StandalonePlugin.vcxproj", "{F28E0FB6-1DEB-AA6F-C594-AB817542508D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{671F37EA-BB55-4474-9D47-2B8A57752CC8} = {671F37EA-BB55-4474-9D47-2B8A57752CC8}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TempName - VST3", "TempName_VST3.vcxproj", "{1A734697-104D-D822-442D-6CBF708B61D4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Justin's Stereo Sculptor - VST3", "Justin's Stereo Sculptor_VST3.vcxproj", "{1A734697-104D-D822-442D-6CBF708B61D4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{671F37EA-BB55-4474-9D47-2B8A57752CC8} = {671F37EA-BB55-4474-9D47-2B8A57752CC8}
 		{77360049-FD45-E84E-58CF-5C9A83E054C9} = {77360049-FD45-E84E-58CF-5C9A83E054C9}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TempName - Shared Code", "TempName_SharedCode.vcxproj", "{671F37EA-BB55-4474-9D47-2B8A57752CC8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Justin's Stereo Sculptor - Shared Code", "Justin's Stereo Sculptor_SharedCode.vcxproj", "{671F37EA-BB55-4474-9D47-2B8A57752CC8}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TempName - VST3 Manifest Helper", "TempName_VST3ManifestHelper.vcxproj", "{77360049-FD45-E84E-58CF-5C9A83E054C9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Justin's Stereo Sculptor - VST3 Manifest Helper", "Justin's Stereo Sculptor_VST3ManifestHelper.vcxproj", "{77360049-FD45-E84E-58CF-5C9A83E054C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

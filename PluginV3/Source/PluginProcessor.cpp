@@ -23,6 +23,17 @@ PluginV3AudioProcessor::PluginV3AudioProcessor()
     apvts.addParameterListener("mid_gain", this);
     apvts.addParameterListener("side_gain", this);
     apvts.addParameterListener("use_mid_side", this);
+    
+    // Initialize gain values
+    masterGain = *apvts.getRawParameterValue("master_gain");
+    leftGain = *apvts.getRawParameterValue("left_gain");
+    rightGain = *apvts.getRawParameterValue("right_gain");
+    invertLeftPhase = *apvts.getRawParameterValue("invert_left") > 0.5f;
+    invertRightPhase = *apvts.getRawParameterValue("invert_right") > 0.5f;
+    phaseOffset = *apvts.getRawParameterValue("phase_offset");
+    midGain = *apvts.getRawParameterValue("mid_gain");
+    sideGain = *apvts.getRawParameterValue("side_gain");
+    useMidSideProcessing = *apvts.getRawParameterValue("use_mid_side") > 0.5f;
 }
 
 PluginV3AudioProcessor::~PluginV3AudioProcessor()
@@ -48,21 +59,21 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginV3AudioProcessor::crea
         "master_gain",                             // Parameter ID
         "Master Gain",                             // Parameter name
         juce::NormalisableRange<float>(0.0f, 3.16227766017f, 0.001f, 0.3f), // min, max, step, skew
-        1.0f);                                     // Default value (0dB, no gain change)
+        1.0f);                                     // Default value (0dB, unity gain)
     
     // Create left channel gain parameter
     auto leftGainParam = std::make_unique<juce::AudioParameterFloat>(
         "left_gain",                               // Parameter ID
         "Left Gain",                               // Parameter name
         juce::NormalisableRange<float>(0.0f, 3.16227766017f, 0.001f, 0.3f), // min, max, step, skew
-        1.0f);                                     // Default value (0dB, no gain change)
+        1.0f);                                     // Default value (0dB, unity gain)
     
     // Create right channel gain parameter
     auto rightGainParam = std::make_unique<juce::AudioParameterFloat>(
         "right_gain",                              // Parameter ID
         "Right Gain",                              // Parameter name
         juce::NormalisableRange<float>(0.0f, 3.16227766017f, 0.001f, 0.3f), // min, max, step, skew
-        1.0f);                                     // Default value (0dB, no gain change)
+        1.0f);                                     // Default value (0dB, unity gain)
     
     // Create left channel phase invert parameter
     auto invertLeftParam = std::make_unique<juce::AudioParameterBool>(
@@ -88,13 +99,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginV3AudioProcessor::crea
         "mid_gain",                                // Parameter ID
         "Mid Gain",                                // Parameter name
         juce::NormalisableRange<float>(0.0f, 3.16227766017f, 0.001f, 0.3f), // min, max, step, skew
-        1.0f);                                     // Default value (0dB, no gain change)
+        1.0f);                                     // Default value (0dB, unity gain)
     
     auto sideGainParam = std::make_unique<juce::AudioParameterFloat>(
         "side_gain",                               // Parameter ID
         "Side Gain",                               // Parameter name
         juce::NormalisableRange<float>(0.0f, 3.16227766017f, 0.001f, 0.3f), // min, max, step, skew
-        1.0f);                                     // Default value (0dB, no gain change)
+        1.0f);                                     // Default value (0dB, unity gain)
     
     // Toggle to enable/disable Mid/Side processing
     auto useMidSideParam = std::make_unique<juce::AudioParameterBool>(
@@ -190,7 +201,7 @@ void PluginV3AudioProcessor::updateDelayBufferSize(int samplesPerBlock)
 //==============================================================================
 const juce::String PluginV3AudioProcessor::getName() const
 {
-    return JucePlugin_Name;
+    return "Justin's Stereo Sculptor";
 }
 
 bool PluginV3AudioProcessor::acceptsMidi() const
@@ -333,8 +344,7 @@ void PluginV3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         
         // Calculate delay in samples for current phase offset
         float delaySamples = getPhaseOffsetDelaySamples();
-        int delayIntegerSamples = static_cast<int>(delaySamples);
-        float delayFraction = delaySamples - delayIntegerSamples;
+        juce::ignoreUnused(delaySamples); // This value is used elsewhere in the code
         
         // Copy input to delay buffer (we'll process directly from there)
         for (int channel = 0; channel < totalNumInputChannels; ++channel)
@@ -408,13 +418,11 @@ void PluginV3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
         {
             // Calculate delay in samples for current phase offset
             float delaySamples = getPhaseOffsetDelaySamples();
-            int delayIntegerSamples = static_cast<int>(delaySamples);
-            float delayFraction = delaySamples - delayIntegerSamples;
             
             // Read delayed samples
             for (int i = 0; i < numSamples; ++i)
             {
-                int readPos = delayBufferPos - delayIntegerSamples + i;
+                int readPos = delayBufferPos - static_cast<int>(delaySamples) + i;
                 // Wrap around if negative
                 if (readPos < 0)
                     readPos += delayBufferLength;
@@ -426,8 +434,11 @@ void PluginV3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
                 float sample1 = delayBuffer->getSample(1, readPos);
                 float sample2 = delayBuffer->getSample(1, readPos2);
                 
+                // Calculate fractional part directly
+                float fraction = delaySamples - static_cast<int>(delaySamples);
+                
                 // Apply linear interpolation for fractional delay
-                channelData[i] = sample1 + delayFraction * (sample2 - sample1);
+                channelData[i] = sample1 + fraction * (sample2 - sample1);
             }
             
             // Update delay buffer position

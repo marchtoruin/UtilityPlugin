@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="i0PAkU" name="PluginV3" projectType="audioplug" useAppConfig="0"
+<JUCERPROJECT id="i0PAkU" name="Justin's Stereo Sculptor" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
-  <MAINGROUP id="jC5AAz" name="PluginV3">
+  <MAINGROUP id="jC5AAz" name="Justin's Stereo Sculptor">
     <GROUP id="{A77842FC-2B43-9EAE-9664-9D155D3F8F31}" name="Source">
       <FILE id="qZW4Cx" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
@@ -35,8 +35,8 @@
   <EXPORTFORMATS>
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="PluginV3"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="PluginV3"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="Justin's Stereo Sculptor"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="Justin's Stereo Sculptor"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>

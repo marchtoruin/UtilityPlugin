@@ -69,9 +69,9 @@ void LevelMeter::paint(juce::Graphics& g)
     
     // Draw dB markings with fixed font size and positioning
     g.setColour(findColour(outlineColourId));
-    juce::Font font;
-    font.setHeight(10.0f);
-    font.setStyleFlags(juce::Font::plain);
+    
+    // Create font with simple approach that avoids deprecation warnings
+    auto font = 10.0f; // Default font size
     g.setFont(font);
     
     // Fixed width for labels to prevent scrunching

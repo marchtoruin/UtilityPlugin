@@ -2,11 +2,11 @@
 
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="TempName\Source">
-      <UniqueIdentifier>{91A458C1-F08E-0FB6-1679-627A30C2277C}</UniqueIdentifier>
+    <Filter Include="Justin's Stereo Sculptor\Source">
+      <UniqueIdentifier>{742DCD38-81FC-E33D-6899-0BE979BFAD62}</UniqueIdentifier>
     </Filter>
-    <Filter Include="TempName">
-      <UniqueIdentifier>{FAED7752-67A9-BDAE-B8D1-607862F110B4}</UniqueIdentifier>
+    <Filter Include="Justin's Stereo Sculptor">
+      <UniqueIdentifier>{C6AA02DE-78AB-4D2B-3055-83280BFD210E}</UniqueIdentifier>
     </Filter>
     <Filter Include="JUCE Modules\juce_audio_basics\audio_play_head">
       <UniqueIdentifier>{EB58F05A-A968-CEBE-40C4-107CDD8F240F}</UniqueIdentifier>
@@ -695,10 +695,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp">
-      <Filter>TempName\Source</Filter>
+      <Filter>Justin's Stereo Sculptor\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\PluginEditor.cpp">
-      <Filter>TempName\Source</Filter>
+      <Filter>Justin's Stereo Sculptor\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LevelMeter.cpp">
+      <Filter>Justin's Stereo Sculptor</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.cpp">
       <Filter>JUCE Modules\juce_audio_basics\audio_play_head</Filter>
@@ -3661,10 +3664,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\PluginProcessor.h">
-      <Filter>TempName\Source</Filter>
+      <Filter>Justin's Stereo Sculptor\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\PluginEditor.h">
-      <Filter>TempName\Source</Filter>
+      <Filter>Justin's Stereo Sculptor\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\LevelMeter.h">
+      <Filter>Justin's Stereo Sculptor</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\JUCE\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h">
       <Filter>JUCE Modules\juce_audio_basics\audio_play_head</Filter>
