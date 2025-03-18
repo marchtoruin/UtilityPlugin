@@ -3,6 +3,8 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "LevelMeter.h"
+#include <cmath> // For sine function
+#include <chrono> // For time-based calculations
 
 //==============================================================================
 // Custom look and feel for toggle buttons to make them look nicer
@@ -103,6 +105,20 @@ public:
             }
         }
         
+        // Time-based pulsing effect using high-resolution timer
+        float milliseconds = static_cast<float>(juce::Time::getMillisecondCounterHiRes());
+        float pulsingFactor = 0.6f + 0.4f * (1.0f + std::sin(milliseconds * 0.001f)); // Adjusted for consistent brightness
+
+        // Conditional coloring for mid-side gain
+        juce::Colour outlineColour;
+        if (slider.getName().containsIgnoreCase("mid") || slider.getName().containsIgnoreCase("side")) {
+            outlineColour = juce::Colours::magenta.withAlpha(pulsingFactor);
+        } else {
+            outlineColour = juce::Colours::cyan.withAlpha(pulsingFactor);
+        }
+
+        juce::Colour pointerColour = juce::Colours::white.withAlpha(pulsingFactor);
+
         // Custom drawing code for rotary slider with fill and line indicator
         auto radius = juce::jmin(width / 2, height / 2) - 4.0f;
         auto centerX = x + width * 0.5f;
@@ -116,16 +132,12 @@ public:
         g.setColour(juce::Colour(0xFF0F0F1A));
         g.fillEllipse(rx, ry, rw, rw);
         
-        // Draw neon outline
-        auto knobColor = slider.findColour(juce::Slider::rotarySliderFillColourId);
-        g.setColour(knobColor.withAlpha(0.5f));
-        g.drawEllipse(rx, ry, rw, rw, 1.5f);
-        
-        // Calculate the noon position (Unity Gain / 0dB position)
-        const float noonAngle = 0.0f; // 12 o'clock is at 0 radians
+        // Draw outline with pulsing effect
+        g.setColour(outlineColour);
+        g.drawEllipse(rx, ry, rw, rw, 1.0f);
         
         // Draw tick marks with 80s neon look
-        g.setColour(knobColor.withAlpha(0.4f));
+        g.setColour(outlineColour.withAlpha(0.4f));
         for (int i = 0; i < 8; i++) {
             float tickAngle = rotaryStartAngle + (i / 8.0f) * (rotaryEndAngle - rotaryStartAngle);
             float innerRadius = radius * 0.7f;
@@ -146,76 +158,35 @@ public:
         
         // Extra mark at 0dB position (noon) - more prominent
         if (!slider.getName().contains("Phase")) {
-            g.setColour(knobColor);
+            g.setColour(outlineColour);
             float innerRadius = radius * 0.7f;
             float outerRadius = radius * 0.95f;
             
             juce::Point<float> start(
-                centerX + innerRadius * std::cos(noonAngle),
-                centerY + innerRadius * std::sin(noonAngle)
+                centerX + innerRadius * std::cos(0.0f),
+                centerY + innerRadius * std::sin(0.0f)
             );
             
             juce::Point<float> end(
-                centerX + outerRadius * std::cos(noonAngle),
-                centerY + outerRadius * std::sin(noonAngle)
+                centerX + outerRadius * std::cos(0.0f),
+                centerY + outerRadius * std::sin(0.0f)
             );
             
             g.drawLine(start.x, start.y, end.x, end.y, 1.5f);
         }
         
-        // Fill arc - only if not at unity gain and not the phase knob
-        if (slider.isEnabled() && (!atUnityGain || slider.getName().contains("Phase"))) {
-            // Create a path for the value arc
-            juce::Path valueArc;
-            
-            if (slider.getName().contains("Phase")) {
-                // For phase, keep the normal left-to-right fill
-                valueArc.addPieSegment(rx, ry, rw, rw, rotaryStartAngle, angle, 0.0f);
-            } else {
-                // For gain knobs: Arc starts at Unity (noon) and extends in the direction of rotation
-                if (belowUnity) {
-                    // If below unity, arc from current position to noon (counterclockwise)
-                    valueArc.addPieSegment(rx, ry, rw, rw, angle, noonAngle, 0.0f);
-                } else {
-                    // If above unity, arc from noon to current position (clockwise)
-                    valueArc.addPieSegment(rx, ry, rw, rw, noonAngle, angle, 0.0f);
-                }
-            }
-            
-            // Fill with neon glow effect
-            g.setColour(knobColor.withAlpha(0.3f));
-            g.fillPath(valueArc);
-            
-            // Add a neon outline to the arc
-            g.setColour(knobColor);
-            g.strokePath(valueArc, juce::PathStrokeType(2.0f));
-        }
-        
-        // Draw neon indicator line
-        juce::Path p;
-        auto lineLength = radius * 0.7f;
-        auto lineThickness = 2.0f;
-        
-        // Draw indicator line
-        p.addRectangle(-lineThickness * 0.5f, -radius, lineThickness, lineLength);
-        
-        // Rotate indicator line to the correct angle
-        p.applyTransform(juce::AffineTransform::rotation(angle).translated(centerX, centerY));
-        
-        // Bright neon color for the indicator
-        g.setColour(knobColor.brighter(0.5f));
-        g.fillPath(p);
-        
-        // Add a glow effect to the indicator
-        g.setColour(knobColor.withAlpha(0.3f));
-        juce::Path glowPath = p;
-        glowPath.addRectangle(-lineThickness * 2.0f, -radius, lineThickness * 4.0f, lineLength);
-        g.fillPath(glowPath);
+        // Draw the pointer with pulsing effect
+        juce::Path pointer;
+        float pointerLength = radius * 0.7f;
+        float pointerThickness = 2.0f;
+        pointer.addRectangle(-pointerThickness * 0.5f, -pointerLength, pointerThickness, pointerLength);
+        g.setColour(pointerColour);
+        g.fillPath(pointer, juce::AffineTransform::rotation(angle).translated(centerX, centerY));
         
         // Draw center dot with neon appearance
-        g.setColour(knobColor.darker(0.2f));
+        g.setColour(outlineColour.darker(0.2f));
         g.fillEllipse(centerX - 3.0f, centerY - 3.0f, 6.0f, 6.0f);
-        g.setColour(knobColor.brighter(0.5f));
+        g.setColour(outlineColour.brighter(0.5f));
         g.fillEllipse(centerX - 1.5f, centerY - 1.5f, 3.0f, 3.0f);
     }
 };
@@ -356,7 +327,7 @@ private:
 /**
 */
 class PluginV3AudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                     private juce::Timer
+                                     public juce::Timer
 {
 public:
     PluginV3AudioProcessorEditor (PluginV3AudioProcessor&);
@@ -378,6 +349,12 @@ private:
     LevelMeter rightMeter;
     juce::Label leftMeterLabel;
     juce::Label rightMeterLabel;
+    
+    // Grid animation
+    juce::LinearSmoothedValue<float> gridIntensity;     // For music response
+    juce::LinearSmoothedValue<float> gridMasterScale;   // For master gain scaling
+    float baseGridIntensity = 0.2f;                     // Minimum grid intensity
+    float maxGridIntensity = 0.8f;                      // Maximum grid intensity when clipping
     
     // Gain controls
     juce::Slider masterGainKnob;
@@ -437,11 +414,19 @@ private:
     juce::Colour accentColour { juce::Colour(0xFF00DCDC) };     // Cyan
     juce::Colour secondaryAccentColour { juce::Colour(0xFFFF3B96) }; // Magenta/Pink
     juce::Colour gridColour { juce::Colour(0xFF2A2A40) };       // Subtle grid color
+    juce::Colour glowingGridColour { juce::Colour(0xFF00DCDC).brighter(0.2f) }; // Brighter cyan for grid glow
     juce::Colour textColour { juce::Colours::white };
     
     // Custom Look and Feel objects
     ZeroDBAtNoonLookAndFeel zeroDBAtNoonLookAndFeel;
     CustomToggleLookAndFeel customToggleLookAndFeel;
+    
+    // Utility functions
+    float calculateMasterGainScale() const;
+    float calculateGridIntensity(float leftLevel, float rightLevel) const;
+    
+    // Bypass button
+    juce::ToggleButton bypassButton { "Bypass" };
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginV3AudioProcessorEditor)
 };

@@ -52,6 +52,10 @@ public:
     float getLeftChannelLevel() const { return leftChannelLevel.getTargetValue(); }
     float getRightChannelLevel() const { return rightChannelLevel.getTargetValue(); }
 
+    // Method to toggle bypass state
+    void setBypass(bool shouldBypass) { isBypassed = shouldBypass; }
+    bool getBypass() const { return isBypassed; }
+
 private:
     juce::AudioProcessorValueTreeState apvts;
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
@@ -89,6 +93,9 @@ private:
     
     // Helper method for Mid/Side processing
     void processMidSide(juce::AudioBuffer<float>& buffer, int numSamples);
+    
+    // Bypass state
+    bool isBypassed { false };
     
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginV3AudioProcessor)

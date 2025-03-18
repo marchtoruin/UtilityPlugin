@@ -271,9 +271,9 @@ void PluginV3AudioProcessor::prepareToPlay (double newSampleRate, int samplesPer
     // Store sample rate for phase offset calculations
     sampleRate = static_cast<float>(newSampleRate);
     
-    // Initialize level smoothing with appropriate ramp length
-    leftChannelLevel.reset(sampleRate, 0.5);  // 500ms smoothing
-    rightChannelLevel.reset(sampleRate, 0.5); // 500ms smoothing
+    // Initialize level smoothing with faster response for grid animation
+    leftChannelLevel.reset(sampleRate, 0.05);  // 50ms smoothing
+    rightChannelLevel.reset(sampleRate, 0.05); // 50ms smoothing
     
     leftChannelLevel.setCurrentAndTargetValue(0.0f);
     rightChannelLevel.setCurrentAndTargetValue(0.0f);
@@ -325,6 +325,17 @@ void PluginV3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
+    // Check if bypass is enabled
+    if (isBypassed)
+    {
+        // Allow audio to pass through unchanged
+        // Reset meter levels to zero
+        leftChannelLevel.setTargetValue(0.0f);
+        rightChannelLevel.setTargetValue(0.0f);
+
+        return;
+    }
+
     // Actual processing of audio
     const int numSamples = buffer.getNumSamples();
     
@@ -385,27 +396,21 @@ void PluginV3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             channelData[sample] *= combinedGain;
         }
         
-        // Find peak level AFTER applying gain
-        float leftPeak = 0.0f;
+        // Calculate RMS level for smoother metering
+        float rmsLevel = 0.0f;
         for (int sample = 0; sample < numSamples; ++sample)
         {
-            leftPeak = std::max(leftPeak, std::abs(channelData[sample]));
+            float currentSample = channelData[sample];
+            rmsLevel += currentSample * currentSample;
         }
+        rmsLevel = std::sqrt(rmsLevel / numSamples);
         
-        // Convert peak to a dB value
-        float leftDb = 0.0f;
-        if (leftPeak > 0.0f)
-        {
-            leftDb = juce::Decibels::gainToDecibels(leftPeak, -60.0f);
-            // Map to 0-1 range for meter display (-60dB to 0dB)
-            float leftMeterValue = juce::jmap(leftDb, -60.0f, 0.0f, 0.0f, 1.0f);
-            leftChannelLevel.setTargetValue(leftMeterValue);
-        }
-        else
-        {
-            // Set to minimum when no signal is present
-            leftChannelLevel.setTargetValue(0.0f);
-        }
+        // Convert to dB and normalize to 0-1 range for metering
+        float dbLevel = juce::Decibels::gainToDecibels(rmsLevel, -60.0f);
+        float normalizedLevel = juce::jmap(dbLevel, -60.0f, 0.0f, 0.0f, 1.0f);
+        
+        // Update the smoothed level with faster response
+        leftChannelLevel.setTargetValue(normalizedLevel);
     }
     
     // Process right channel (1)
@@ -461,27 +466,21 @@ void PluginV3AudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
             channelData[sample] *= combinedGain;
         }
         
-        // Find peak level AFTER applying gain
-        float rightPeak = 0.0f;
+        // Calculate RMS level for smoother metering
+        float rmsLevel = 0.0f;
         for (int sample = 0; sample < numSamples; ++sample)
         {
-            rightPeak = std::max(rightPeak, std::abs(channelData[sample]));
+            float currentSample = channelData[sample];
+            rmsLevel += currentSample * currentSample;
         }
+        rmsLevel = std::sqrt(rmsLevel / numSamples);
         
-        // Convert peak to a dB value
-        float rightDb = 0.0f;
-        if (rightPeak > 0.0f)
-        {
-            rightDb = juce::Decibels::gainToDecibels(rightPeak, -60.0f);
-            // Map to 0-1 range for meter display (-60dB to 0dB)
-            float rightMeterValue = juce::jmap(rightDb, -60.0f, 0.0f, 0.0f, 1.0f);
-            rightChannelLevel.setTargetValue(rightMeterValue);
-        }
-        else
-        {
-            // Set to minimum when no signal is present
-            rightChannelLevel.setTargetValue(0.0f);
-        }
+        // Convert to dB and normalize to 0-1 range for metering
+        float dbLevel = juce::Decibels::gainToDecibels(rmsLevel, -60.0f);
+        float normalizedLevel = juce::jmap(dbLevel, -60.0f, 0.0f, 0.0f, 1.0f);
+        
+        // Update the smoothed level with faster response
+        rightChannelLevel.setTargetValue(normalizedLevel);
     }
 }
 

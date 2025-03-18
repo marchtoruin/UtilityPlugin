@@ -5,6 +5,17 @@
 PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
+    // Initialize grid intensity smoothing with faster response for music
+    gridIntensity.reset(60, 0.01f);  // 10ms smoothing at 60fps for faster response
+    gridIntensity.setCurrentAndTargetValue(baseGridIntensity);
+    
+    // Initialize master gain scaling with slower response for smooth transitions
+    gridMasterScale.reset(60, 0.05f); // 50ms smoothing for smoother transitions
+    gridMasterScale.setCurrentAndTargetValue(1.0f);
+    
+    // Start the timer for faster updates - MUST BE CALLED BEFORE ANY OTHER INITIALIZATION
+    startTimerHz(60); // 60fps for smoother animation
+    
     // Set up the level meters
     leftMeter.setVertical(true);
     leftMeter.showPeakMarker(true);
@@ -203,6 +214,7 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
             // Force immediate reset of the meters to handle -inf dB properly
             leftMeter.reset();
             rightMeter.reset();
+            gridIntensity.setTargetValue(baseGridIntensity); // Set to minimum when muted
         }
     };
     
@@ -321,9 +333,6 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     enableMidSideAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.getAPVTS(), "use_mid_side", enableMidSideButton);
     
-    // Start the timer for faster meter updates
-    startTimerHz(60); // 60fps for smoother animation
-    
     // Set editor size - increased width and height to ensure everything fits properly
     setSize (700, 620);
     
@@ -382,6 +391,13 @@ PluginV3AudioProcessorEditor::PluginV3AudioProcessorEditor (PluginV3AudioProcess
     rightGainKnob.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     midGainKnob.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     sideGainKnob.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+
+    // Set up the bypass button
+    bypassButton.setToggleState(audioProcessor.getBypass(), juce::dontSendNotification);
+    bypassButton.onClick = [this]() {
+        audioProcessor.setBypass(bypassButton.getToggleState());
+    };
+    addAndMakeVisible(bypassButton);
 }
 
 PluginV3AudioProcessorEditor::~PluginV3AudioProcessorEditor()
@@ -409,18 +425,73 @@ void PluginV3AudioProcessorEditor::paint (juce::Graphics& g)
     // Create a clean, dark background
     g.fillAll(backgroundColour);
     
-    // Draw 80s-style grid
-    g.setColour(gridColour);
+    // Get current intensities
+    float musicResponse = gridIntensity.getCurrentValue();
+    float masterScale = gridMasterScale.getCurrentValue();
     
-    // Horizontal grid lines
+    // Calculate final intensity with master scaling
+    float finalIntensity = musicResponse * masterScale;
+    
+    // Draw base grid with very low opacity
+    g.setColour(gridColour.withAlpha(0.05f));
+    
+    // Calculate grid spacing and offset to ensure alignment
     int gridSpacing = 20;
+    float lineThickness = 2.0f;
+    float halfThickness = lineThickness / 2.0f;
+    
+    // Draw base grid lines with precise positioning
     for (int y = gridSpacing; y < getHeight(); y += gridSpacing) {
-        g.drawLine(0, y, getWidth(), y, 1.0f);
+        float yPos = static_cast<float>(y) + halfThickness;
+        g.drawLine(0.0f, yPos, static_cast<float>(getWidth()), yPos, lineThickness);
+    }
+    for (int x = gridSpacing; x < getWidth(); x += gridSpacing) {
+        float xPos = static_cast<float>(x) + halfThickness;
+        g.drawLine(xPos, 0.0f, xPos, static_cast<float>(getHeight()), lineThickness);
     }
     
-    // Vertical grid lines
+    // Draw glowing overlay grid with higher contrast
+    // Add a subtle pulse effect
+    float pulseAmount = 0.2f * std::sin(juce::Time::getMillisecondCounterHiRes() * 0.004f);
+    float glowIntensity = finalIntensity + (finalIntensity * pulseAmount);
+    
+    // Calculate stereo balance factor (-1.0 to 1.0)
+    float leftLevel = audioProcessor.getLeftChannelLevel();
+    float rightLevel = audioProcessor.getRightChannelLevel();
+    float totalLevel = leftLevel + rightLevel;
+    float stereoBalance = 0.0f;
+    
+    if (totalLevel > 0.0f) {
+        // Calculate balance between -1.0 (all left) and 1.0 (all right)
+        stereoBalance = (rightLevel - leftLevel) / totalLevel;
+    }
+    
+    // Calculate gradient positions based on stereo balance
+    float gradientStartX = 0.0f;
+    float gradientEndX = static_cast<float>(getWidth());
+    
+    // Adjust gradient positions based on stereo balance
+    float shiftAmount = static_cast<float>(getWidth()) * 0.5f * stereoBalance;
+    gradientStartX += shiftAmount;
+    gradientEndX += shiftAmount;
+    
+    // Use both cyan and magenta for the glow with increased opacity
+    g.setGradientFill(juce::ColourGradient(
+        glowingGridColour.withAlpha(glowIntensity * 0.8f),
+        gradientStartX, 0.0f,
+        secondaryAccentColour.withAlpha(glowIntensity * 0.6f),
+        gradientEndX, static_cast<float>(getHeight()),
+        false
+    ));
+    
+    // Draw glowing grid lines with precise positioning
+    for (int y = gridSpacing; y < getHeight(); y += gridSpacing) {
+        float yPos = static_cast<float>(y) + halfThickness;
+        g.drawLine(0.0f, yPos, static_cast<float>(getWidth()), yPos, lineThickness);
+    }
     for (int x = gridSpacing; x < getWidth(); x += gridSpacing) {
-        g.drawLine(x, 0, x, getHeight(), 1.0f);
+        float xPos = static_cast<float>(x) + halfThickness;
+        g.drawLine(xPos, 0.0f, xPos, static_cast<float>(getHeight()), lineThickness);
     }
     
     // Draw a stylish border around the plugin
@@ -763,25 +834,33 @@ void PluginV3AudioProcessorEditor::resized()
         buttonHeight
     );
     enableMidSideButton.setBounds(midSideButtonBounds);
+
+    // Position the bypass button
+    auto bypassButtonBounds = bounds.removeFromBottom(30);
+    bypassButton.setBounds(bypassButtonBounds);
 }
 
 void PluginV3AudioProcessorEditor::timerCallback()
 {
-    // Get the current level values from the processor
+    // Get the current RMS levels from the processor
     auto leftLevel = audioProcessor.getLeftChannelLevel();
     auto rightLevel = audioProcessor.getRightChannelLevel();
     
-    // Check if master gain is at minimum (-inf dB)
-    float masterValue = masterGainKnob.getValue();
-    bool isMasterMuted = masterValue < 0.0001f;
+    // Calculate the music response intensity
+    float targetIntensity = calculateGridIntensity(leftLevel, rightLevel);
     
-    // Update the meters or reset them if master is muted
-    if (isMasterMuted) {
-        // Force meters to zero when master is at -inf
+    // Calculate the master gain scaling
+    float targetScale = calculateMasterGainScale();
+    
+    // Update both smoothed values
+    gridIntensity.setTargetValue(targetIntensity);
+    gridMasterScale.setTargetValue(targetScale);
+    
+    // Update meters
+    if (masterGainKnob.getValue() < 0.0001f) {
         leftMeter.reset();
         rightMeter.reset();
     } else {
-        // Update with current levels
         leftMeter.setLevel(leftLevel);
         rightMeter.setLevel(rightLevel);
     }
@@ -808,5 +887,39 @@ void PluginV3AudioProcessorEditor::timerCallback()
     
     // Update stereo placement visualization
     stereoPlacement.setLevels(leftLevel, rightLevel);
-    stereoPlacement.repaint();
+    
+    // Force a repaint to update the grid animation
+    repaint();
+}
+
+float PluginV3AudioProcessorEditor::calculateMasterGainScale() const
+{
+    // Get the current master gain value
+    float masterGainValue = static_cast<float>(masterGainKnob.getValue());
+    
+    // Convert to dB for better control
+    float dB = 20.0f * std::log10(masterGainValue);
+    
+    // Map the dB range to a scale factor
+    // -12dB (0.25) to +6dB (2.0) maps to 0.0 - 1.0
+    if (dB <= -60.0f) return 0.0f;  // Effectively muted
+    if (dB <= -12.0f) return juce::jmap(dB, -60.0f, -12.0f, 0.0f, 0.3f);  // Gradual increase in low range
+    if (dB <= 0.0f)   return juce::jmap(dB, -12.0f, 0.0f, 0.3f, 0.7f);    // Normal operating range
+    return juce::jmap(dB, 0.0f, 6.0f, 0.7f, 1.0f);                         // High gain range
+}
+
+float PluginV3AudioProcessorEditor::calculateGridIntensity(float leftLevel, float rightLevel) const
+{
+    // Calculate combined level for grid intensity with more dramatic response
+    float combinedLevel = std::max(leftLevel, rightLevel);
+    
+    // Apply a gentler curve for the music response
+    combinedLevel = std::pow(combinedLevel, 0.5f);
+    
+    // Add moderate energy to the response
+    float energyBoost = combinedLevel * 1.5f;
+    combinedLevel = std::min(energyBoost, 1.0f);
+    
+    // Map to a moderate range
+    return juce::jmap(combinedLevel, 0.0f, 1.0f, baseGridIntensity, maxGridIntensity);
 }
